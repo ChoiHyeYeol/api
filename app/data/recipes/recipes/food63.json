@@ -1,0 +1,39 @@
+{
+  "writer": "별온마녀",
+  "title": "당뇨에 좋은 연근주먹밥",
+  "summary": "아주 간단하고 쉽고 영양가 있는, 당뇨에 좋은 연근을 넣어 만든 연근주먹밥입니다.",
+  "portion": "1인분",
+  "time": "30분 이내",
+  "level": "아무나",
+  "ingredient": {
+    "연근 연근조림다진거": "구매",
+    "들기름": "구매",
+    "표고버섯 다진거": "구매",
+    "맛소금": "구매"
+  },
+  "sauce": {},
+  "knowHow": [
+    "https://www.10000recipe.com/recipe/6898577",
+    "https://www.10000recipe.com/recipe/6898578",
+    "https://www.10000recipe.com/recipe/6905490",
+    "https://www.10000recipe.com/recipe/6876053",
+    "https://www.10000recipe.com/recipe/6875709",
+    "https://www.10000recipe.com/recipe/6899727",
+    "https://www.10000recipe.com/recipe/6858666"
+  ],
+  "step_list": [
+    {
+      "표고버섯을 간장과 들기름에 볶아둡니다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/26/3ab467c403de44ede5bc236cf716a59e1.jpg"
+    },
+    {
+      "연근조림한 거 잘게 다져서 현미콩밥에 비벼요.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/26/fedfa2dcad2634b30266b73a9eb76f661.jpg"
+    },
+    {
+      "먹기 좋은 크기로 뭉쳐주면 완성입니다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/26/ab6cd23e4d943434e9df158960c8130f1.jpg"
+    }
+  ],
+  "tip": "",
+  "category_time": "아침",
+  "category_menu": "면/밥",
+  "_classification_note": "연근주먹밥은 주로 아침 식사로 적합하며, 주먹밥은 밥을 주재료로 하여 만든 음식이므로 면/밥 카테고리에 해당합니다."
+}

@@ -1,0 +1,75 @@
+{
+  "writer": "Tina소울푸드",
+  "title": "당뇨와 위장병에 좋은 두릅 초밥 만드는법",
+  "summary": "봄엔 신선한 초록 나물들의 향연이라 넘 행복해지고 건강해지는 계절인 거 같아요. 두릅은 데쳐서 초고추장에 찍어 먹기도 하고 두릅전도 부치고 두릅 튀김도 하고\n두릅 장아찌도 만들고 김치도 만들고 하는데\n색다르게 먹고 싶어 두릅 초밥을 만들어 봤어요.\n배합초로 밥양념을 하고 와사비 얹고 간장 찍어 먹으면 간단하게 두릅초밥이 완성돼요.\n두릅이 너무 크면 큰 줄기는 떼어서 만들면 되구요. 작은 잎으로 만들어야 먹기도 좋고 보기도 아담하니 좋은 거 같아요. 싱싱하고 몸에 좋은 두릅 초밥 건강하고 상큼한 맛이예요.\n두릅나무 어린 순은 단백질이 많고 섬유질,당질, 인, 칼슘, 철분 , 비타민과 사포닌이 많이 함유되어 있어 혈당을 내려주고 혈중지질을 낮춰줘서 당뇨병, 신장병, 위장병에 좋다고 해요.",
+  "portion": "2인분",
+  "time": "60분 이내",
+  "level": "중급",
+  "ingredient": {
+    "두릅 12포기": "구매",
+    "밥 2공기": "구매",
+    "구운김 1/4장": "구매",
+    "생와사비 약간": "구매",
+    "초고추장 약간": "구매",
+    "쌈장 약간": "구매",
+    "양조간장 1스푼": "구매"
+  },
+  "sauce": {
+    "소금 1/2티스푼": "구매",
+    "설탕 1티스푼": "구매",
+    "식초 2티스푼": "구매"
+  },
+  "knowHow": [
+    "https://www.10000recipe.com/recipe/6899723",
+    "https://www.10000recipe.com/recipe/6888291",
+    "https://www.10000recipe.com/recipe/6895435",
+    "https://www.10000recipe.com/recipe/6899727",
+    "https://www.10000recipe.com/recipe/6888290",
+    "https://www.10000recipe.com/recipe/6904022"
+  ],
+  "step_list": [
+    {
+      "쌀을 씻어 30분 정도 불렸다가 다시마 1조각 넣고 밥을 해주세요.전기밥솥": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/7d7bf296e270875211cadde21c121d561.jpg"
+    },
+    {
+      "두릅은 껍질같은 외피를 벗겨주세요.": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/b35c3434566dc7769ed68b87d00d9d161.jpg"
+    },
+    {
+      "딱딱한 나무 부분은 칼로 도려내듯 잘라 주세요.도마 , 조리용나이프": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/56b41b4aba8905a79649b8f28226695c1.jpg"
+    },
+    {
+      "물에 2-3번 헹궈 주세요.믹싱볼": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/7b981aa1f7e69dcfebde3b5589068d481.jpg"
+    },
+    {
+      "체에 건져 물기를 빼주세요.채반": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/985116180483f220975573683d3ae9511.jpg"
+    },
+    {
+      "끓는 물에 소금 1스푼 넣고요.냄비 , 조리용스푼": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/2b43123006d2c9ac0257c066ed0d5a6a1.jpg"
+    },
+    {
+      "두릅을 넣고 1분 정도 데쳐 주세요.": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/d85c1a3f5220cbe299fae8077ddaaac91.jpg"
+    },
+    {
+      "찬물에 헹궈 물기를 손으로 꼭 짜주세요.": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/70cc775183deaaaaf7690debf3574dec1.jpg"
+    },
+    {
+      "배합초를 섞어 설탕과 소금을 잘 녹여 주세요.소스볼": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/ee4f5e15ff7b550a9c8568730c23d0231.jpg"
+    },
+    {
+      "뜨거운 밥에 배합초를 넣고 주걱으로 잘 섞어 주세요.면기 , 주걱": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/924c60d1e9fee3ad3bfc7fa261639e2d1.jpg"
+    },
+    {
+      "양념장을 기호에 맞게 배합해주세요. (초고추장+ 와사비 쌈장 + 와사비 쌈장 +초고추장 + 와사비 와사비)": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/3e101bb4fe323dcac7647d0f6de788e31.jpg"
+    },
+    {
+      "비닐 장갑을 끼고 찬물에 한번 살짝 담갔다 초밥을 뭉쳐 주면 밥알이 달라붙지 않아요.위생장갑": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/bf7b96f19dec5d3bbc32f6e9a02372401.jpg"
+    },
+    {
+      "밥위에 원하는 소스 얹고 두릅 얹고 김 띠를 말아 주세요. 김 끝이 아래 밥알 부분에서 만나게 하면 잘 붙고 깔끔한 띠가 되요.": "https://recipe1.ezmember.co.kr/cache/recipe/2023/03/11/56cb52dd71edf47841dcf09e71a65f711.jpg"
+    }
+  ],
+  "tip": "소스를 달리해서 여러가지 맛의 초밥을 만들어 보세요. 다채로운 맛을 즐길 수 있어요. - 초고추장+ 와사비 - 쌈장 + 와사비 - 쌈장 +초고추장 + 와사비 - 와사비 개인적인 입맛으로 평가해보면 쌈장을 넣으면 초밥이라기 보다 한국적인 쌈밥맛이 나더라구요. 초밥의 맛을 즐기고 싶으면 와사비 얹고 간장 찍어 먹는게 젤 낫구요. 초고추장 + 와사비도 상큼하고 좋더라구요.",
+  "category_time": "점심",
+  "category_menu": "면/밥",
+  "_classification_note": "두릅 초밥은 주로 점심이나 저녁에 먹는 식사로 적합하며, 밥을 주재료로 사용하여 초밥 형태로 만들어지는 요리이기 때문에 '면/밥' 카테고리에 분류됩니다."
+}

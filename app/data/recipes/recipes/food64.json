@@ -1,0 +1,58 @@
+{
+  "writer": "저녁노을",
+  "title": "당뇨병 잡는 바라후 비빔밥",
+  "summary": "당뇨병에 효능이 있다는 바라후로 비빔밥을 만들어 보았습니다.",
+  "portion": "1인분",
+  "time": "30분 이내",
+  "level": "초급",
+  "ingredient": {
+    "밥 1공기": "구매",
+    "무나물": "구매",
+    "콩나물": "구매",
+    "유채나물": "구매",
+    "바라후 50g": "구매",
+    "달걀 1개": "구매",
+    "빨간 파프리카 1/2개": "구매",
+    "주황 파프리카 1/2개": "구매",
+    "노란 파프리카 1/2개": "구매"
+  },
+  "sauce": {
+    "초고추장 1숟가락": "구매"
+  },
+  "knowHow": [
+    "https://www.10000recipe.com/recipe/6876848",
+    "https://www.10000recipe.com/recipe/6884354",
+    "https://www.10000recipe.com/recipe/6894991",
+    "https://www.10000recipe.com/recipe/6876891",
+    "https://www.10000recipe.com/recipe/6870767",
+    "https://www.10000recipe.com/recipe/6883847",
+    "https://www.10000recipe.com/recipe/6870862"
+  ],
+  "step_list": [
+    {
+      "무 1/4쪽을 준비한다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/058bb350b29b9679a54b8f088eeb9b4b1.jpg"
+    },
+    {
+      "콩나물을 준비한다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/ecb9b7efbd6c15b87b1bb136db02d3a71.jpg"
+    },
+    {
+      "유채나물을 준비한다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/6ee7dbda1c0c9b840d5847f75eb995701.jpg"
+    },
+    {
+      "파프리카는 곱게 채를 썰어 살짝 볶아주고 바라후도 씻어 물기를 빼고 먹기 좋게 손질해 둔다.파프리카 손질법 레시피": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/605ee230818589230b8a3148b48693d51.jpg"
+    },
+    {
+      "차조밥 1/2그릇을 담고 나물과 채소를 돌려가며 담아준다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/8200355590b69f8f599743e6890f3a3b1.jpg"
+    },
+    {
+      "달걀을 구워 하나 올려주고 초고추장 1숟가락을 올려 마무리한다.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/c3ec272c1b1ba29e73bd5fb0be91ad7a1.jpg"
+    },
+    {
+      "맛있게 비벼먹는 바라후 비빔밥.": "https://recipe1.ezmember.co.kr/cache/recipe/2015/05/20/65ec94ceb0773b8beb63b0240da3e53e.jpg"
+    }
+  ],
+  "tip": "",
+  "category_time": "점심",
+  "category_menu": "면/밥",
+  "_classification_note": "비빔밥은 주로 점심 식사로 즐겨지며, 주재료인 밥이 포함되어 있어 면/밥 카테고리에 해당합니다."
+}
