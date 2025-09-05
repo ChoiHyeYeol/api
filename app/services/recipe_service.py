@@ -67,7 +67,7 @@ def crawl_recipe_stub(url: str) -> Dict[str, Any]:
             alert.accept()
         except NoAlertPresentException:
             pass  # alert 없으면 그대로 진행
-        
+
         mainImg = safe_get_attr(driver, By.CSS_SELECTOR, "#main_thumbs","src")
         writer  = safe_get_text(driver, By.CLASS_NAME, 'user_info2_name')
         title   = safe_get_text(driver, By.CSS_SELECTOR, '#contents_area_full > div.view2_summary.st3 > h3')
@@ -128,7 +128,7 @@ def crawl_recipe_stub(url: str) -> Dict[str, Any]:
         return review_dicts
         
     except Exception as e:
-        print(f"⚠️ 페이지 로딩 실패: {link} ({e})")
+        print(f"⚠️ 페이지 로딩 실패: {url} ({e})")
     finally:
         try:
             if driver:
