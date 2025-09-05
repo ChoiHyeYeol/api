@@ -454,7 +454,7 @@ def _apply_allergy_filter(recipe: Dict[str, Any], allergies: List[str]) -> Dict[
 
 def transform_recipe_from_dict(food_json: Dict[str, Any], user_type: str, allergies: List[str]) -> Dict[str, Any]:
     # 1) 정리
-    recipe = _clean_recipe(food_json)
+    recipe = food_json
     # 2) 저당 매핑 치환
     recipe = apply_low_sugar_mapping(recipe, user_type)
     # 3) 알러지 필터
