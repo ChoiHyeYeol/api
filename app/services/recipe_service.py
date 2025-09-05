@@ -24,6 +24,10 @@ import json
 import time
 from selenium.common.exceptions import NoAlertPresentException
 import os
+
+import tempfile, shutil, uuid
+from selenium import webdriver as wb
+from selenium.webdriver.chrome.options import Options
 # -------------------------
 def crawl_recipe_stub(url: str) -> Dict[str, Any]:
     """만개의 레시피 URL → food*.json 파싱 (여기서는 비워둠/주석)
@@ -42,18 +46,20 @@ def crawl_recipe_stub(url: str) -> Dict[str, Any]:
         elems = driver.find_elements(by, selector)
         return elems[0].get_attribute(attr) if elems else default
 
-    options = wb.ChromeOptions()
-    options.add_argument('headless')
-    driver = wb.Chrome(options=options)
+    tmp_dir = tempfile.mkdtemp(prefix=f"chrome-profile-{uuid.uuid4()}-")  # ✅ 매 요청마다 고유 폴더
+    options = Options()
+    options.add_argument("--headless=new")           # ✅ 헤드리스
+    options.add_argument("--no-sandbox")             # ✅ 컨테이너/서버 필수
+    options.add_argument("--disable-dev-shm-usage")  # ✅ /dev/shm 이슈 회피
+    options.add_argument(f"--user-data-dir={tmp_dir}")  # ✅ 고유 프로필 디렉토리
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1280,2000")
 
-    driver.set_page_load_timeout(30)  # 30초 넘으면 자동 타임아웃
-    
-
-    # link = "https://www.10000recipe.com/recipe/6926477"
-    link = url
+    driver = None
 
     try:
-        driver.get(link)
+        driver = wb.Chrome(options=options)
+        driver.get(url)
         # ✅ alert 있으면 닫고 스킵
         try:
             alert = driver.switch_to.alert
@@ -61,69 +67,78 @@ def crawl_recipe_stub(url: str) -> Dict[str, Any]:
             alert.accept()
         except NoAlertPresentException:
             pass  # alert 없으면 그대로 진행
+        
+        mainImg = safe_get_attr(driver, By.CSS_SELECTOR, "#main_thumbs","src")
+        writer  = safe_get_text(driver, By.CLASS_NAME, 'user_info2_name')
+        title   = safe_get_text(driver, By.CSS_SELECTOR, '#contents_area_full > div.view2_summary.st3 > h3')
+        summary = safe_get_text(driver, By.CSS_SELECTOR, '#recipeIntro')
+        portion = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info1')
+        cook_time    = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info2')
+        level   = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info3')
+
+        # 재료/양념 리스트
+        ingredient_list = [li.text.split("\n") for li in driver.find_elements(
+            By.CSS_SELECTOR, '#divConfirmedMaterialArea > ul:nth-child(1) > li')]
+        sauce_list = [li.text.split("\n") for li in driver.find_elements(
+            By.CSS_SELECTOR, '#divConfirmedMaterialArea > ul:nth-child(2) > li')]
+
+        # 맨 뒤만 value, 앞쪽 join → key
+        ingredient = {
+            " ".join(x[0]): x[1] if len(x) > 1 else ""
+            for x in ingredient_list if x
+        }
+        sauce = {
+            " ".join(x[0]): x[1] if len(x) > 1 else ""
+            for x in sauce_list if x
+        }
+
+        # 노하우(링크 리스트)
+        knowHow = list({
+            item.get_attribute("href")
+            for item in driver.find_elements(By.CSS_SELECTOR, '.swiper-slide > a')
+        })
+
+        # 조리 단계 (있을 수도 없을 수도 있음)
+        step = driver.find_elements(By.CSS_SELECTOR, '.view_step_cont.media')
+        step_list = [{
+            s.text.replace("\n",""):
+            (s.find_element(By.TAG_NAME,'img').get_attribute('src') if s.find_elements(By.TAG_NAME,'img') else 0)
+        } for s in step]
+
+        # 팁 (없을 경우 "")
+        tip = safe_get_text(driver, By.CSS_SELECTOR, '#obx_recipe_step_start > dl > dd')
+
+        review_dicts = {
+            "mainImg":mainImg,
+            "writer": writer,
+            "title": title,
+            "summary": summary,
+            "portion": portion,
+            "time": cook_time,
+            "level": level,
+            "ingredient": ingredient,
+            "sauce": sauce,
+            "knowHow": knowHow,
+            "step_list": step_list,
+            "tip": tip
+        }
+
+        print(review_dicts)
+        
+        return review_dicts
+        
     except Exception as e:
         print(f"⚠️ 페이지 로딩 실패: {link} ({e})")
-        
+    finally:
+        try:
+            if driver:
+                driver.quit()
+        finally:
+            # ✅ 프로필 디렉토리 정리(안 하면 /tmp 쌓임)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
     # 있으면 가져오고 없으면 기본값 ""
-    mainImg = safe_get_attr(driver, By.CSS_SELECTOR, "#main_thumbs","src")
-    writer  = safe_get_text(driver, By.CLASS_NAME, 'user_info2_name')
-    title   = safe_get_text(driver, By.CSS_SELECTOR, '#contents_area_full > div.view2_summary.st3 > h3')
-    summary = safe_get_text(driver, By.CSS_SELECTOR, '#recipeIntro')
-    portion = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info1')
-    cook_time    = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info2')
-    level   = safe_get_text(driver, By.CLASS_NAME, 'view2_summary_info3')
-
-    # 재료/양념 리스트
-    ingredient_list = [li.text.split("\n") for li in driver.find_elements(
-        By.CSS_SELECTOR, '#divConfirmedMaterialArea > ul:nth-child(1) > li')]
-    sauce_list = [li.text.split("\n") for li in driver.find_elements(
-        By.CSS_SELECTOR, '#divConfirmedMaterialArea > ul:nth-child(2) > li')]
-
-    # 맨 뒤만 value, 앞쪽 join → key
-    ingredient = {
-        " ".join(x[0]): x[1] if len(x) > 1 else ""
-        for x in ingredient_list if x
-    }
-    sauce = {
-        " ".join(x[0]): x[1] if len(x) > 1 else ""
-        for x in sauce_list if x
-    }
-
-    # 노하우(링크 리스트)
-    knowHow = list({
-        item.get_attribute("href")
-        for item in driver.find_elements(By.CSS_SELECTOR, '.swiper-slide > a')
-    })
-
-    # 조리 단계 (있을 수도 없을 수도 있음)
-    step = driver.find_elements(By.CSS_SELECTOR, '.view_step_cont.media')
-    step_list = [{
-        s.text.replace("\n",""):
-        (s.find_element(By.TAG_NAME,'img').get_attribute('src') if s.find_elements(By.TAG_NAME,'img') else 0)
-    } for s in step]
-
-    # 팁 (없을 경우 "")
-    tip = safe_get_text(driver, By.CSS_SELECTOR, '#obx_recipe_step_start > dl > dd')
-
-    review_dicts = {
-        "mainImg":mainImg,
-        "writer": writer,
-        "title": title,
-        "summary": summary,
-        "portion": portion,
-        "time": cook_time,
-        "level": level,
-        "ingredient": ingredient,
-        "sauce": sauce,
-        "knowHow": knowHow,
-        "step_list": step_list,
-        "tip": tip
-    }
-
-    print(review_dicts)
     
-    return review_dicts
 
 
 # -------------------------
