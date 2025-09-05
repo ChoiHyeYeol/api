@@ -21,6 +21,91 @@ class DataPaths:
     gi_intl_path: Optional[str] = "app/data/share/GI 지수 국제.pdf"       # GI 지수 국제 (csv/xlsx or pre-extracted)
     guidelines_dir: Optional[str] = "app/data/diet"     # PDFs or extracted text; optional for RAG
 
+
+# -----------------------------
+# DB: load recipes from PostgreSQL (tb_recipe) — fixed to your columns
+# -----------------------------
+from psycopg.rows import dict_row
+
+def _to_float(x, default=0.0):
+    try:
+        if x is None:
+            return default
+        return float(x)
+    except Exception:
+        return default
+
+def load_recipes_from_db(limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    """
+    tb_recipe 스키마(예시 csv와 동일 컬럼)에 맞춘 고정 로더.
+    반환 형태는 기존 파일 로더와 동일(_file, title/rcp_nm, category_menu, nutrition 포함).
+    """
+    from ..db import db as _db  # app/db.py (get_conn)
+    items: List[Dict[str, Any]] = []
+
+    sql = """
+    SELECT
+      rcp_id                                      AS id,
+      rcp_nm                                      AS title,
+      rcp_nm                                      AS rcp_nm,
+      category_menu                               AS category_menu,
+      cal_val::double precision                   AS kcal,
+      ch_val::double precision                    AS carb_g,
+      pr_val::double precision                    AS protein_g,
+      fat_val::double precision                   AS fat_g,
+      NULL::double precision                      AS sugar_g,
+      NULL::double precision                      AS sodium_mg,
+      NULL::double precision                      AS fiber_g,
+      gi_val::double precision                    AS gi,
+      -- 아래는 부가 정보(원하면 그대로 item에 포함)
+      desc_txt, tip, level, portion,
+      category_time, "time", user_id, main_img
+    FROM tb_recipe
+    """
+    if isinstance(limit, int) and limit > 0:
+        sql += " LIMIT %(limit)s"
+
+    with _db.get_conn() as conn, conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(sql, {"limit": limit} if "limit" in sql else None)
+        for row in cur.fetchall():
+            rid = row["id"]
+            title = row.get("title")
+            rcp_nm = row.get("rcp_nm")
+            category = row.get("category_menu")
+
+            nutrition = {
+                "kcal":        _to_float(row.get("kcal")),
+                "carb_g":      _to_float(row.get("carb_g")),
+                "protein_g":   _to_float(row.get("protein_g")),
+                "fat_g":       _to_float(row.get("fat_g")),
+                "sugar_g":     _to_float(row.get("sugar_g")),     # NULL -> 0.0
+                "sodium_mg":   _to_float(row.get("sodium_mg")),   # NULL -> 0.0
+                "fiber_g":     _to_float(row.get("fiber_g")),     # NULL -> 0.0
+                "gi":          (float(row.get("gi")) if row.get("gi") is not None else None),
+                "carb_weight": _to_float(row.get("carb_g")),
+            }
+
+            item = {
+                "_file": rid,
+                "title": title,
+                "rcp_nm": rcp_nm,
+                "category_menu": category,
+                "nutrition": nutrition,
+                # 원하면 부가 정보도 그대로 내려주자
+                "desc_txt": row.get("desc_txt"),
+                "tip": row.get("tip"),
+                "level": row.get("level"),
+                "portion": row.get("portion"),
+                "category_time": row.get("category_time"),
+                "time": row.get("time"),
+                "user_id": row.get("user_id"),
+                "main_img": row.get("main_img"),
+            }
+            items.append(item)
+
+    return items
+
+
 # -----------------------------
 # Lightweight “RAG” stub
 # --- NEW: real RAG retriever ---
@@ -256,6 +341,7 @@ class FoodRow:
     sodium_mg: float
     fiber_g: float
     gi: Optional[float] = None
+    category:str = ""
 
 def _col(df: pd.DataFrame, key: str) -> Optional[str]:
     # Try common variations quickly
@@ -275,7 +361,7 @@ def build_food_index(df_kor: Optional[pd.DataFrame], df_usda: Optional[pd.DataFr
 
     def add_row(row: Dict[str, Any], code_key: str, name_key: str,
                 kcal_key: str, carb_key: str, protein_key: str, fat_key: str,
-                sugar_key: str, sodium_key: str, fiber_key: str):
+                sugar_key: str, sodium_key: str, fiber_key: str, category_key:str):
         try:
             code = str(row[code_key])
             idx[code] = FoodRow(
@@ -288,7 +374,8 @@ def build_food_index(df_kor: Optional[pd.DataFrame], df_usda: Optional[pd.DataFr
                 sugar_g=float(row.get(sugar_key, 0) or 0),
                 sodium_mg=float(row.get(sodium_key, 0) or 0),
                 fiber_g=float(row.get(fiber_key, 0) or 0),
-                gi=None
+                gi=None,
+                category=str(row.get(category_key, "")),
             )
         except Exception:
             pass
@@ -304,8 +391,9 @@ def build_food_index(df_kor: Optional[pd.DataFrame], df_usda: Optional[pd.DataFr
         sugar = _col(df_kor, "당류(g)") or _col(df_kor, "sugar")
         sodium = _col(df_kor, "나트륨(mg)") or _col(df_kor, "sodium")
         fiber = _col(df_kor, "식이섬유(g)") or _col(df_kor, "fiber")
+        menu_category = _col(df_kor, "식품대분류명")
         for _, r in df_kor.iterrows():
-            add_row(r, ck, nk, kcal, carb, protein, fat, sugar, sodium, fiber)
+            add_row(r, ck, nk, kcal, carb, protein, fat, sugar, sodium, fiber,menu_category)
 
     # USDA (optional, merge by code-like key if you maintain one; else skip or use FDC_ID)
     # Skipped here unless your schema aligns
@@ -702,7 +790,7 @@ class DietPlanner:
         self.knowledge = RAGDietKnowledge(paths)
 
         # Load datasets (lazy-tolerant)
-        self.recipes = load_recipes(paths.recipes_dir)
+        self.recipes = load_recipes_from_db(limit=None)
         self.df_kor = _safe_read_table(paths.food_kor_path)
         self.df_usda = _safe_read_table(paths.food_usda_path)
         self.df_gi_kor = _safe_read_table(paths.gi_kor_path)
@@ -720,7 +808,7 @@ class DietPlanner:
         
         self.rec_mem = PenaltyMemory(maxlen=24, base_penalty=0.80, decay=0.90)
         self.food_mem = PenaltyMemory(maxlen=24, base_penalty=0.85, decay=0.92)
-        random.seed(42)
+        # random.seed(42)
     
     def _ranked_with_penalty(self, items: List[str], mem: PenaltyMemory, is_recipe=True):
         ranked = []
@@ -765,46 +853,65 @@ class DietPlanner:
         rng = random.random()
         if slot == "breakfast":
             # (2,1),(1,1),(1,2),(2,0) 가중
-            if rng < 0.35: return (2,1)
+            if rng < 0.35: return (1,0)
             if rng < 0.60: return (1,1)
             if rng < 0.80: return (1,2)
             return (2,0)
         elif slot == "lunch":
             if rng < 0.30: return (2,1)
-            if rng < 0.55: return (1,2)
-            if rng < 0.75: return (3,0)
-            if rng < 0.95: return (0,3)
+            if rng < 0.65: return (1,2)
+            if rng < 0.75: return (2,0)
             return (1,1)
         elif slot == "dinner":
             if rng < 0.30: return (1,2)
             if rng < 0.55: return (2,1)
             if rng < 0.75: return (1,1)
-            if rng < 0.90: return (0,3)
-            return (3,0)
+            if rng < 0.90: return (3,0)
+            return (2,0)
         else:  # dessert
             if rng < 0.50: return (1,0)
             if rng < 0.85: return (0,1)
             return (1,1)
 
-    def _materialize_items(self, r_ids: List[str], f_ids: List[str], slot: str) -> List[dict]:
+    def _meal_realistic(self, menu:List[str], slot:str)-> bool:
+        # 로직 구현 부분
+        rice = 0
+        soup = 0
+        for item in menu :
+            if slot in ("lunch", "dinner"):
+                if item in ["K","빵 및 과자류","유제품류 및 빙과류","음료 및 차류"]:
+                    return False
+            if item in ["N","밥류","죽 및 스프류","면 및 만두류"]:
+                rice+=1
+            if item in ["B","국 및 탕류","죽 및 스프류","면 및 만두류","찌개 및 전골류"]:
+                soup+=1
+        if rice>1 or soup>1:
+            return False
+        return True
+
+    def _materialize_items(self, r_ids: List[str], f_ids: List[str], slot: str) -> Tuple[List[dict],bool]:
         rec_map = {r["_file"]: r for r in self.recipes}
         out: List[dict] = []
+        menuDuplicate:List[str] = []
         for rid in r_ids:
             r = rec_map.get(rid)
             if not r: 
                 continue
+            menuDuplicate.append(r.get("category_menu")) # 카테고리 넣어서 메뉴 조합 확인
             n = _nutrition_from_recipe(r)
-            out.append({"type":"recipe","id":rid,"name": r.get("title") or r.get("name") or rid, "nutrition": n})
+            out.append({"type":"recipe","id":rid,"name": r.get("title") or r.get("rcp_nm") or rid, "nutrition": n})
         sv = _slot_default_serving(slot)
         for code in f_ids:
             row = self.food_index.get(code)
             if not row:
                 continue
+            menuDuplicate.append(row.category) # 카테고리 넣어서 메뉴 조합 확인
             n = _nutrition_from_foodrow(row, serving_g=sv)
             out.append({"type":"food","id":code,"name": row.name,
             "serving_g": sv,                 # ★ 추가
             "nutrition": n})
-        return out
+        realistic=self._meal_realistic(menuDuplicate, slot)
+        return out, realistic
 
     def _meal_ok(self, meal_items: List[dict], constraints: dict, meal_slot: str, user_type: str, use_llm: bool) -> Tuple[bool, Dict[str, Any]]:
         total = _sum_meal_nutrition([it["nutrition"] for it in meal_items])
@@ -830,8 +937,8 @@ class DietPlanner:
         constraints: dict,
         preferences: List[str],
         allergies: List[str],
-        tries_per_combo: int = 6,
-        max_sets: int = 8,
+        tries_per_combo: int = 10,
+        max_sets: int = 12,
         use_llm: bool = False,  # 후보 생성 단계에선 기본 비활성 (속도/비용↓)
     ):
         """
@@ -867,7 +974,11 @@ class DietPlanner:
             if not ids or ids in seen_ids:
                 continue
 
-            items = self._materialize_items(r_pick, f_pick, slot)
+            items,realistic = self._materialize_items(r_pick, f_pick, slot)
+            
+            
+            if not realistic: # 주메뉴 종류가 겹치면 패스하기.
+                continue
             
             # ★ 추가: 서빙을 탄수 목표에 맞게 자동 보정
             items = self._rebalance_servings(items, constraints, slot)
@@ -900,6 +1011,25 @@ class DietPlanner:
         # 점수순 정렬
         results.sort(key=lambda x: x["score"], reverse=True)
         print(results)
+        
+        if not results:
+            # fallback A: (1,0) 단일 레시피 시도
+            if r_ranked:
+                rid = r_ranked[0][1]
+                items, _ = self._materialize_items([rid], [], slot)
+                ok, _ = self._meal_ok(items, constraints, slot, user_type="(hidden)", use_llm=False)
+                if ok:
+                    results.append({"ids":[rid], "items":items, "score":0.0})
+
+            # fallback B: 제약 완화 재검
+            if not results and r_ranked:
+                relaxed = constraints.copy()
+                lo, hi = _slot_targets(relaxed, slot)[0]
+                relaxed[f"{slot}_carb_g"] = (max(0, lo-10), hi+10)
+                ok, _ = self._meal_ok(items, relaxed, slot, user_type="(hidden)", use_llm=False)
+                if ok:
+                    results.append({"ids":[rid], "items":items, "score":-0.5})
+
         return results
 
     #슬롯 후보 사전 점검
@@ -1017,15 +1147,29 @@ class DietPlanner:
           # 1) 슬롯별 유효 후보 세트 수집
           slot2cands: Dict[str, List[dict]] = {}
           for slot in MEAL_SLOTS:
-              slot2cands[slot] = self._gen_slot_candidates(
-                  slot=slot,
-                  constraints=constraints,
-                  preferences=preferences,
-                  allergies=allergies,
-                  tries_per_combo=6,
-                  max_sets=8,
-                  use_llm=False  # 후보 생성은 규칙만으로 빠르게
-              )
+                slot2cands[slot] = self._gen_slot_candidates(
+                    slot=slot,
+                    constraints=constraints,
+                    preferences=preferences,
+                    allergies=allergies,
+                    tries_per_combo=6,
+                    max_sets=8,
+                    use_llm=False  # 후보 생성은 규칙만으로 빠르게
+                )
+                if not slot2cands[slot] :
+                    for idx in range(10) :
+                        slot2cands[slot] = self._gen_slot_candidates(
+                            slot=slot,
+                            constraints=constraints,
+                            preferences=preferences,
+                            allergies=allergies,
+                            tries_per_combo=6,
+                            max_sets=8,
+                            use_llm=False  # 후보 생성은 규칙만으로 빠르게
+                        )
+                        if slot2cands[slot] :
+                            break
+                      
 
           # 2) 하루 조합 선택(beam search)
           try:
