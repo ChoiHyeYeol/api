@@ -1,40 +1,44 @@
-from fastapi import APIRouter, Body, Query
+# router_recipe.py
+import asyncio
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
-
-
-from app.services.recipe_service import (
-    transform_recipe_from_dict,
-    crawl_recipe_stub, # (2번) 함수 시그니처만 유지 – 내부는 비워둠
-)
-
+from app.services.recipe_service import transform_recipe_from_dict
+from app.services.crawler import crawl_recipe_stub  # 위에서 분리한 파일
 
 router = APIRouter(prefix="/recipe", tags=["recipe"])
 
-
-
-
 class ConvertRequest(BaseModel):
-# 2번까지 끝났다고 가정: 이미 추출된 JSON 파일 경로 또는 JSON 본문 자체를 받는다  
-    url: Optional[str] = Field(
-    None, description="이미 추출된 food*.json 경로. 예: /data/recipes/recipes/food123.json"
-    )
-    recipe_json: Optional[Dict[str, Any]] = Field(
-    None, description="크롤링 결과 레시피 JSON. (recipe_path 대신 사용 가능)"
-    )
-    user_type: str = Field(
-    ..., description="사용자 유형: FPG_HIGH | PPG_HIGH | WEIGHT_GAIN | INSULIN"
-    )
-    allergies: List[str] = Field(default_factory=list, description="알러지 재료 목록")
+    url: Optional[str] = Field(None, description="만개의레시피 URL")
+    recipe_json: Optional[Dict[str, Any]] = Field(None, description="이미 크롤된 JSON")
+    user_type: str = Field(..., description="FPG_HIGH | PPG_HIGH | WEIGHT_GAIN | INSULIN")
+    allergies: List[str] = Field(default_factory=list)
 
+# ✅ 동시 크롤 제한 (간단 세마포어)
+CRAWL_CONCURRENCY = 2
+_sema = asyncio.Semaphore(CRAWL_CONCURRENCY)
 
-
+# ✅ 전체 작업 타임아웃 (크롤 + 변환)
+TOTAL_TIMEOUT = 40  # 초
 
 @router.post("/convert_recipe")
 async def convert_recipe(req: ConvertRequest):
-    """(3번 흐름) 저당 변환 + GI/영양 분석 후 'food*.json' 포맷으로 반환"""
-    if req.recipe_json:
-        return transform_recipe_from_dict(req.recipe_json, req.user_type, req.allergies)  
-    
-    return transform_recipe_from_dict(crawl_recipe_stub(req.url), req.user_type, req.allergies)
-    
+    if not req.url and not req.recipe_json:
+        raise HTTPException(status_code=400, detail="url 또는 recipe_json 중 하나는 필요합니다.")
+
+    async def _work():
+        if req.recipe_json:
+            data = req.recipe_json
+        else:
+            # 블로킹 크롤링을 워커 스레드로
+            async with _sema:  # 동시성 제한
+                data = await asyncio.to_thread(crawl_recipe_stub, req.url)
+        return transform_recipe_from_dict(data, req.user_type, req.allergies)
+
+    try:
+        result = await asyncio.wait_for(_work(), timeout=TOTAL_TIMEOUT)
+        return result
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="크롤링/변환 타임아웃")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"변환 실패: {e}")
