@@ -808,7 +808,7 @@ class DietPlanner:
         
         self.rec_mem = PenaltyMemory(maxlen=24, base_penalty=0.80, decay=0.90)
         self.food_mem = PenaltyMemory(maxlen=24, base_penalty=0.85, decay=0.92)
-        # random.seed(42)
+        random.seed(42)
     
     def _ranked_with_penalty(self, items: List[str], mem: PenaltyMemory, is_recipe=True):
         ranked = []
@@ -880,6 +880,9 @@ class DietPlanner:
         for item in menu :
             if slot in ("lunch", "dinner"):
                 if item in ["K","빵 및 과자류","유제품류 및 빙과류","음료 및 차류"]:
+                    return False
+            elif slot in ("dessert") :
+                if item not in ["K","음료 및 차류","빵 및 과자류","죽 및 스프류","생채·무침류","유제품류 및 빙과류","빵 및 과자류"]:
                     return False
             if item in ["N","밥류","죽 및 스프류","면 및 만두류"]:
                 rice+=1
@@ -964,8 +967,11 @@ class DietPlanner:
             r_need, f_need = self._choose_combo(slot)
             
             # 레시피 영양이 0인 경우가 있어 탄수가 모자라면 무조건 탈락하게 되는데 음식에서 보충할 수 있도록 최소 값 설정.
-            if slot in ("lunch", "dinner") and f_need == 0:
-              f_need = 1
+            # if slot in ("lunch", "dinner") and f_need == 0:
+            #   f_need = 1
+            
+            if slot in ("breakfast","lunch", "dinner") and r_need == 0:
+                r_need = 1
 
             r_pick = self._sample_bundle(r_ranked, self.rec_mem, count=r_need, topn=6, temperature=0.75) if r_need > 0 else []
             f_pick = self._sample_bundle(f_ranked, self.food_mem, count=f_need, topn=6, temperature=0.75) if f_need > 0 else []
